@@ -5,29 +5,24 @@ DOWN    = '#ff2741';
 ERROR   = 'black';
 
 // pixel measures
-var w = 15;
-var h = 10;
+var w = 15,
+    h = 10,
 
 // starting pixel for each positon used for 1,7,30 day icons
-var POS1 = 4,
+    POS1 = 4,
     POS2 = 9,
-    POS3 = 14;
+    POS3 = 14,
 
-// week is actually 3 days
-var week = 3 * 24 * 60 * 60;
-var day = 24 * 60 * 60;
-var fif = 15 * 60;
+    // query used to retrieve latest price (15min delay)
+    queryLatest     = 'https://blockchain.info/ticker?cors=true',
 
-// query used to retrieve latest price (15min delay)
-var queryLatest = 'https://blockchain.info/ticker?cors=true';
+    // query used to return 1 day, 7 day, and 30 day averages in USD (returns all currencies)
+    queryAverages   = 'http://api.bitcoincharts.com/v1/weighted_prices.json',
 
-// var queryLatest = 'https://api.coindesk.com/v1/bpi/currentprice.json';
+    // query used to return last month of daily prices for graphing purposes
+    queryHistory    = 'https://api.coindesk.com/v1/bpi/historical/close.json';
 
-// query used to return 1 day, 7 day, and 30 day averages in USD (returns all currencies)
-var queryAverages = 'http://api.bitcoincharts.com/v1/weighted_prices.json';
-
-var queryHistory = 'https://api.coindesk.com/v1/bpi/historical/close.json';
-
+// main
 function Bitcoins () {
     var s = this;
 
@@ -56,7 +51,7 @@ function Bitcoins () {
     }
 
     // updates 1,7 and 30 day averages
-    s.updateAverages = function (callback) {
+    var updateAverages = function (callback) {
 
         $.get(queryAverages,function(newData) {
 
@@ -114,7 +109,7 @@ function Bitcoins () {
     }
 
     // gets latest price (delayed 15min)
-    s.updateCurrent = function () {
+    updateCurrent = function () {
 
         $.get(queryLatest,function(newData) {
 
@@ -139,7 +134,7 @@ function Bitcoins () {
     }
 
     function newCurrent(newData) {
-        // data.currentPrice = data['bpi']['USD']['rate'];
+
         data.currentPrice = newData['USD']['15m'];
 
         data.day.change     = data.currentPrice - data.day.average;
@@ -148,6 +143,23 @@ function Bitcoins () {
 
         drawIcon(data);
     }
+
+
+    // initial
+    updateAverages(updateCurrent);
+
+    // update current price every minute
+    setInterval(function() {
+        console.log('updating latest...');
+        updateCurrent();
+    }, 60000);
+
+    // update averages every 30min
+    setInterval(function() {
+        console.log('updating averages...');
+        updateAverages();
+    }, 1800000);
+
 };
 
 // redraw icon with updated price information
@@ -216,20 +228,3 @@ function down(ctx,pos) {
 
 // init
 bitcoins = new Bitcoins();
-
-
-// initialize
-bitcoins.updateAverages(bitcoins.updateCurrent);
-
-// update current price every minute
-setInterval(function() {
-    console.log('updating latest...');
-    bitcoins.updateCurrent();
-}, 60000);
-
-// update averages every 30min
-setInterval(function() {
-    console.log('updating averages...');
-    bitcoins.updateAverages();
-}, 1800000);
-

@@ -51,10 +51,6 @@ function sign(x) { return x ? x < 0 ? -1 : 1 : 0; }
 //gets the color based on the sign using the color globals for UP and DOWN defined in background.js
 function color(num) { return sign(num) > 0 ? BGP.UP : sign(num) < 0 ? BGP.DOWN : BGP.STAY; }
 
-function log(data) {
-    console.log(data);
-}
-
 // draws chart using the Highcharts library
 function drawChart(data) {
 

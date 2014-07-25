@@ -50,8 +50,49 @@ function Bitcoins () {
         return data.currentPrice != -1 ? data : -1;
     }
 
+
+
+    // updates the historical data used for graphing
+    s.queryHistory = function (callback) {
+        console.log('queryHistory');
+
+        // not sure whats going on but success 200 gets caught by fail case
+        $.get(queryHistory, function (newData) {
+            // we never make it in here
+            console.log('queryHistory/succ');
+            console.log(newData);
+
+        }).fail( function (err) {
+            console.log('queryHistory/err');
+
+            var res = err.responseText;
+
+            // TODO: update this process, string manipulation is rediculous
+            res = res.split('{"bpi":{')[1];
+            res = res.split('},"disclaimer"')[0];
+            res = res.split(',');
+
+            var obj = {
+                values: []
+            };
+
+            res.forEach( function (ea) {
+                var item = {};
+                var kv = ea.split(':');
+                item.x = new Date(kv[0].slice(1,kv[0].length-1)).getTime()/1000;
+                item.y = parseInt(kv[1]);
+                obj.values.push(item);
+            });
+
+            callback(obj);
+
+        });
+
+
+    }
+
     // updates 1,7 and 30 day averages
-    var updateAverages = function (callback) {
+    function updateAverages(callback) {
 
         $.get(queryAverages,function(newData) {
 
@@ -69,70 +110,35 @@ function Bitcoins () {
         });
     }
 
-    // updates the historical data used for graphing
-    s.queryHistory = function (callback) {
-        console.log('queryHistory');
-        // JSON response is incorrectly formatted therefore I have to
-        // handle error case and reparse the responseText manuallyk
-        $.get(queryHistory, function (newData) {
-
-            console.log('queryHistory/succ');
-            console.log(newData);
-
-        }).fail( function (err) {
-            console.log('queryHistory/err');
-            console.log(err.error());
-
-            var res = err.responseText;
-
-            res2 = JSON.parse(res);
-            console.log(res2);
-            res = res.split('{"bpi":{')[1];
-            res = res.split('},"disclaimer"')[0];
-            res = res.split(',');
-
-            var obj = {
-                values: []
-            };
-            res.forEach( function (ea) {
-                var item = {};
-                var kv = ea.split(':');
-                item.x = new Date(kv[0].slice(1,kv[0].length-1)).getTime()/1000;
-                item.y = parseInt(kv[1]);
-                obj.values.push(item);
-            });
-
-            callback(obj);
-        });
-
-
-    }
-
     // gets latest price (delayed 15min)
-    updateCurrent = function () {
+    function updateCurrent() {
 
+        // not sure why but the successful response is sometimes caught by the
+        // fail and returns a 'responseText' string that is invalid JSON and
+        // therefore cannot be parsed using the JSON.parse method
         $.get(queryLatest,function(newData) {
-
-            console.log('updated latest.');
-            console.log(newData);
+            console.log('updateCurrent / by success method');
 
             newCurrent(newData);
 
         }).fail(function(err) {
+            console.log('updateCurrent / by fail method');
 
-             var res = err.responseText;
+            var res = err.responseText;
 
-             var r1 = res.slice(0,res.length - 6);
-             var r2 = res.slice(res.length - 5, res.length);
+            var r1 = res.slice(0,res.length - 6);
+            var r2 = res.slice(res.length - 5, res.length);
 
-             res = r1 + r2;
+            res = r1 + r2;
 
-             var newData = JSON.parse(res);
+            var newData = JSON.parse(res);
 
-             newCurrent(newData);
-         });
+            newCurrent(newData);
+
+        });
     }
 
+    // updates currentPrice and calculates changes
     function newCurrent(newData) {
 
         data.currentPrice = newData['USD']['15m'];
@@ -150,7 +156,7 @@ function Bitcoins () {
 
     // update current price every minute
     setInterval(function() {
-        console.log('updating latest...');
+        console.log('updating current...');
         updateCurrent();
     }, 60000);
 

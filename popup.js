@@ -176,16 +176,11 @@ function drawChart(data) {
 
     $('tspan').text('');
     $('#resetZoom').click(function() {
-        // console.log(chart);
-        // chart.xAxis.setExtremes((d - month*1000)/1000, d/1000);
-        // console.log(chart.series[0].color.stops[0][1]);
         chart.zoomOut();
     });
 
     var d = new Date().getTime();
-    // chart.xAxis[0].setExtremes((d - month*1000)/1000, d/1000);
     chart.xAxis[0].setExtremes((d - month), d);
-    // chart.showResetZoom();
 
 }
 

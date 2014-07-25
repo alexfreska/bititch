@@ -91,7 +91,7 @@ function Bitcoins () {
 
     }
 
-    // updates 1,7 and 30 day averages
+    // updates 1, 7, and 30 day averages
     function updateAverages(callback) {
 
         $.get(queryAverages,function(newData) {
